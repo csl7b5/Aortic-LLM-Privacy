@@ -56,7 +56,7 @@ The study evaluates three model configurations against a standardized holdout ev
 
 ---
 
-## Calculating PatientRarity Scores
+## Calculating Patient Rarity Scores
 A critical hypothesis of this study is that LLMs memorize patients *inversely proportional to their clinical rarity*. To avoid arbitrary heuristics (e.g., "rare means $>3$ surgeries"), we compute rarity using a mathematically grounded, multi-axis **Self-Information (Surprisal)** framework.
 
 ### Self-Information Score: $I(x) = -\log_{10} p(x)$
