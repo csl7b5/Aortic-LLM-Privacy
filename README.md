@@ -34,8 +34,7 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 | | `Bicuspid_aortic_valve` | Boolean | `1` = Yes, `0` = No |
 | **Measurements**| `first_reported_diameter` | Numeric | Size in mm (e.g. `45` or `45.5`) |
 | | `intervention_diameter` | Numeric | Size in mm (e.g. `50`) |
-| **Surgery** 
-| | `surg_N_type` | Free-text | Clinician description (e.g. "Bentall procedure with 29mm graft") |
+| **Surgery** | `surg_N_type` | Free-text | Clinician description (e.g. "Bentall procedure with 29mm graft") |
 | | **Procedure Flags** | Boolean | `surg_N_aortic_valve_repair`, `surg_N_aortic_valve_replacement`, `surg_N_aortic_root_repair`, `surg_N_aortic_root_replacement`, `surg_N_ascending_aorta_replacement`, `surg_N_hemiarch_replacement`, `surg_N_total_arch_replacement`, `surg_N_stage_I_elephant_trunk`, `surg_N_TEVAR`, `surg_N_CABG`, `surg_N_descending_replacement` |
 | **Outcomes** | `underwent_reoperation` | Boolean | `1` = Yes, `0` = No |
 | | `Reoperation_indication` | Free-text | Field describing why reoperation occurred. |
