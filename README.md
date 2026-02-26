@@ -57,7 +57,7 @@ The study evaluates three model configurations against a standardized holdout ev
 
 ---
 
-## Methodology: Supervised Fine-Tuning & Memorization
+## <img src="https://thinkingmachines.ai/tinker/svgs/tinkertoy-cover.svg" width="24" height="24"> Supervised Fine-Tuning & Memorization
 
 ### Supervised Fine-Tuning (SFT)
 Large Language Models are pre-trained on vast corpuses of internet text to understand language organically. **Supervised Fine-Tuning (SFT)** is the subsequent process of updating the model's inner weights using highly specific, structured examples (in our case, `Prompt -> Ground Truth Patient History`). By minimizing the loss against exact clinical records, the model adopts the persona, format, and clinical reasoning present in our proprietary dataset.
