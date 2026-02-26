@@ -1,11 +1,16 @@
 # Mitigating Privacy Attacks on LLMs Trained on Surgical Data using Supervised Fine-Tuning
 
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Data Privacy](https://img.shields.io/badge/Data_Privacy-Strict-red?style=for-the-badge&logo=security&logoColor=white)
+![LLM Fine-Tuning](https://img.shields.io/badge/LLM-Fine--Tuning-blue?style=for-the-badge&logo=openai&logoColor=white)
+
 ## Project Overview
 This project investigates whether Large Language Models (LLMs) memorize the records of individual patients when fine-tuned on clinical datasets, and evaluates the effectiveness of data coarsening as a privacy mitigation strategy. 
 
 We utilize a proprietary dataset of aortic genetics patients to generate unstructured clinical summaries (Patient Cards). We then measure how heavily the LLM memorizes unique individuals by subjecting the models to **Membership Inference Attacks (MIA)** and **Collapse/Prompt Extraction** experiments.
 
-**⚠️ DATA PRIVACY NOTICE:** The raw data backing this project is proprietary, restricted clinical data. This repository contains only the data engineering scripts and methodology framework. Raw patient records must not be shared or leaked. A strict `.gitignore` is included to prevent accidental commits of the `data/` directory.
+> [!WARNING]
+> **DATA PRIVACY NOTICE:** The raw data backing this project is proprietary, restricted clinical data. This repository contains only the data engineering scripts and methodology framework. Raw patient records must not be shared or leaked. A strict `.gitignore` is included to prevent accidental commits of the `data/` directory.
 
 ## Using Your Own Dataset
 If you are replicating this pipeline, you must supply your own clinical CSV. 
