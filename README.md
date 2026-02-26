@@ -9,7 +9,7 @@ This project investigates whether Large Language Models (LLMs) memorize the reco
 
 We utilize a proprietary dataset of aortic genetics patients to generate unstructured clinical summaries (Patient Cards). We then measure how heavily the LLM memorizes unique individuals by subjecting the models to **Membership Inference Attacks (MIA)** and **Collapse/Prompt Extraction** experiments.
 
-> [!WARNING]
+> [!CAUTION]
 > **DATA PRIVACY NOTICE:** The raw data backing this project is proprietary, restricted clinical data. This repository contains only the data engineering scripts and methodology framework. Raw patient records must not be shared or leaked. A strict `.gitignore` is included to prevent accidental commits of the `data/` directory.
 
 ## Using Your Own Dataset
@@ -42,12 +42,13 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 | | `mortality` | Boolean | `1` = Dead, `0` = Alive |
 | | `Causes_of_death` | Integer | `1` = Aortic/Cardiac, `2` = Other |
 
-## Study Architecture
-The study evaluates three model configurations against a standardized holdout evaluation set:
-
-*   **M0 (Baseline):** A prompt-only baseline (no fine-tuning).
-*   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
-*   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
+> [!NOTE]
+> ### Study Architecture
+> The study evaluates three model configurations against a standardized holdout evaluation set:
+> 
+> *   **M0 (Baseline):** A prompt-only baseline (no fine-tuning).
+> *   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
+> *   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
 
 ### Evaluation Metrics
 1.  **Membership Inference (AUC):** Can a classifier determine if a patient was in the `train` split based on the nearest-neighbor similarity of the LLM's generated output?
@@ -79,33 +80,29 @@ Stratification is anchored to established disclosure control literature (k-anony
 
 The project is organized into `src/` (pipeline logic) and `data/` (raw and generated artifacts).
 
-```text
-.
-├── 📁 src/
-│   ├── 🐍 config.py.template             # Template for global configuration
-│   ├── 🐍 generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
-│   ├── 🐍 verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
-│   ├── 🐍 preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
-│   ├── 🐍 analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
-│   ├── 🐍 compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
-│   ├── 🐍 create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
-│   ├── 🐍 prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
-│   └── 🐍 launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
-│
-├── 📁 data/ (Ignored by git)
-│   ├── 📁 raw/
-│   │   └── 📊 Updated Aortic Genetic Patients Database...csv  # (Proprietary source data)
-│   ├── 📁 cards/
-│   │   ├── 📝 cards_full.jsonl           # M1 Training source
-│   │   ├── 📝 cards_coarsened.jsonl      # M2 Training source
-│   │   └── 📝 cards_partial.jsonl        # Evaluation Prompt source
-│   └── 📁 processed/
-│       ├── 📊 splits.csv                 # Train/Test assignments + all continuous rarity metrics
-│       ├── 📝 eval_prompts.jsonl         # Inference attack prompts mapping to Patient IDs
-│       ├── 📝 tinker_train_M1_full.jsonl # Payload for Tinker SFT (M1)
-│       └── 📝 tinker_train_M2_coarsened.jsonl # Payload for Tinker SFT (M2)
-└── 📖 README.md
-```
+* **`src/`**
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `config.py.template` — Template for global configuration
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `generate_cards.py` — ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `verify_cards.py` — QA: Asserts 100% data fidelity between cards and CSV
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `preview_raw_cards.py` — Temporary: Generates raw PHI cards for manual verification
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `analyze_rarity.py` — Stats: Outputs initial gene/trajectory frequency counts
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `compute_rarity_scores.py` — Stats: Computes I_total surprisal and k-anonymity
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `create_splits_and_prompts.py` — Pipeline: 80/20 Stratified train/test splits + eval prompts
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `prepare_tinker_data.py` — Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `launch_tinker_jobs.py` — API execution script to trigger model fine-tuning
+
+* **`data/`** *(Ignored by git)*
+  * **`raw/`**
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `Updated Aortic Genetic Patients Database...csv` — *(Proprietary source data)*
+  * **`cards/`**
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_full.jsonl` — M1 Training source
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_coarsened.jsonl` — M2 Training source
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_partial.jsonl` — Evaluation Prompt source
+  * **`processed/`**
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `splits.csv` — Train/Test assignments + all continuous rarity metrics
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `eval_prompts.jsonl` — Inference attack prompts mapping to Patient IDs
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M1_full.jsonl` — Payload for Tinker SFT (M1)
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M2_coarsened.jsonl` — Payload for Tinker SFT (M2)
 
 ## 🚀 Getting Started
 1. ⚙️ Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
