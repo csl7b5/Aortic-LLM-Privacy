@@ -6,7 +6,7 @@ from collections import Counter
 
 from generate_cards import (
     _safe_bool01, _map_multi, COMPLICATING_FACTORS_MAP,
-    AAS_MAP, ANEURYSM_INVOLVEMENT_MAP, SURG_TYPES, _parse_date
+    AAS_MAP, ANEURYSM_INVOLVEMENT_MAP, SURG_TYPES
 )
 
 from config import CSV_PATH, PARTIAL_CARDS_PATH, OUT_SPLITS_PATH, OUT_PROMPTS_PATH
@@ -54,7 +54,7 @@ def get_trajectory_profile(row):
     ]
     
     for n in [1, 2, 3]:
-        dt = _parse_date(row.get(f"surg_{n}_date"))
+        has_age = not pd.isna(row.get(f"surg_{n}_age"))
         any_flag = False
         cats = []
         for t in SURG_TYPES:
@@ -64,7 +64,7 @@ def get_trajectory_profile(row):
         type_val = row.get(f"surg_{n}_type")
         any_type = not pd.isna(type_val) and str(type_val).strip() not in ("", "\xa0", "nan", "NaN")
         
-        if dt is not None or any_flag or any_type:
+        if has_age or any_flag or any_type:
             n_surg += 1
             for label, keys in SURG_CATEGORY_RULES:
                 for k in keys:
