@@ -82,15 +82,15 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 ```text
 .
 ├── 📁 src/
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> config.py.template             # Template for global configuration
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
-│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
-│   └── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
+│   ├── 🐍 config.py.template             # Template for global configuration
+│   ├── 🐍 generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
+│   ├── 🐍 verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
+│   ├── 🐍 preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
+│   ├── 🐍 analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
+│   ├── 🐍 compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
+│   ├── 🐍 create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
+│   ├── 🐍 prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
+│   └── 🐍 launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
 │
 ├── 📁 data/ (Ignored by git)
 │   ├── 📁 raw/
