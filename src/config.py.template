@@ -1,0 +1,23 @@
+import os
+
+# --- Dataset Configuration ---
+# Point this to your local proprietary clinical dataset.
+# IMPORTANT: Never commit your raw patient data, or the generated cards, to GitHub.
+# The data/ directory is explicitly ignored in the .gitignore.
+CSV_PATH = "../data/raw/<REPLACE_WITH_YOUR_CSV_FILENAME>.csv"
+
+# --- Output Directories ---
+DATA_DIR = "../data"
+RAW_DIR = os.path.join(DATA_DIR, "raw")
+CARDS_DIR = os.path.join(DATA_DIR, "cards")
+PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+
+# --- Specific Output Files ---
+PARTIAL_CARDS_PATH = os.path.join(CARDS_DIR, "cards_partial.jsonl")
+FULL_CARDS_PATH = os.path.join(CARDS_DIR, "cards_full.jsonl")
+COARSENED_CARDS_PATH = os.path.join(CARDS_DIR, "cards_coarsened.jsonl")
+
+OUT_SPLITS_PATH = os.path.join(PROCESSED_DIR, "splits.csv")
+OUT_PROMPTS_PATH = os.path.join(PROCESSED_DIR, "eval_prompts.jsonl")
+OUT_M1_PATH = os.path.join(PROCESSED_DIR, "tinker_train_M1_full.jsonl")
+OUT_M2_PATH = os.path.join(PROCESSED_DIR, "tinker_train_M2_coarsened.jsonl")
