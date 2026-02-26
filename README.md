@@ -57,6 +57,31 @@ The study evaluates three model configurations against a standardized holdout ev
 
 ---
 
+## Methodology: Supervised Fine-Tuning & Memorization
+
+### Supervised Fine-Tuning (SFT)
+Large Language Models are pre-trained on vast corpuses of internet text to understand language organically. **Supervised Fine-Tuning (SFT)** is the subsequent process of updating the model's inner weights using highly specific, structured examples (in our case, `Prompt -> Ground Truth Patient History`). By minimizing the loss against exact clinical records, the model adopts the persona, format, and clinical reasoning present in our proprietary dataset.
+
+However, SFT inherently risks catastrophic privacy failures. If a model overfits to the training data, it may memorize the exact arbitrary strings of a specific patient's record, allowing malicious actors to extract protected health information (PHI) simply by prompting the model with a few known demographic details.
+
+### The Tinker Platform (Thinking Machines Lab)
+To execute the fine-tuning pipelines and massive parallel inference generation required for this project, we utilize **Tinker**, a developer platform built by the [Thinking Machines Lab](https://www.thinkingmachineslab.com/). 
+
+Tinker provides scalable infrastructure for:
+1.  **LoRA Fine-Tuning:** Efficiently fine-tuning `meta-llama/Llama-3.1-8B-Instruct` using Low-Rank Adaptation via the `tinker-cookbook`.
+2.  **Batch Inference:** Sourcing thousands of parallel predictions across the newly minted model endpoints via the Tinker `SamplingClient`.
+
+### Experimental Phases (Epoch Scaling)
+Our study dissects memorization across two distinct optimization regimes:
+1.  **Phase I: Baseline Generalization (3 Epochs)**
+    *   Models are trained for 3 epochs (industry standard for optimal generalization).
+    *   **Goal:** Determine if standard clinical SFT inherently leaks privacy, or if the model merely acts as a generalized "expert clinician."
+2.  **Phase II: Deep Memorization (12 Epochs)**
+    *   Models are aggressively overfit for 12 epochs.
+    *   **Goal:** Force the weights to memorize arbitrary, non-generalizable PHI (e.g. exact `MM/DD/YYYY` surgery dates and rare VUS genetic mutations). This phase isolates where and how systemic privacy collapse occurs under stress.
+
+---
+
 ## Calculating Patient Rarity Scores
 A critical hypothesis of this study is that LLMs memorize patients *inversely proportional to their clinical rarity*. To avoid arbitrary heuristics (e.g., "rare means $>3$ surgeries"), we compute rarity using a mathematically grounded, multi-axis **Self-Information (Surprisal)** framework.
 
@@ -82,18 +107,26 @@ Stratification is anchored to established disclosure control literature (k-anony
 The project is organized into `src/` (pipeline logic) and `data/` (raw and generated artifacts).
 
 * **`src/`**
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `config.py.template` — Template for global configuration
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `convert_dates_to_ages.py` — Privacy: Scrubs exact surgery/DOB dates into patient age
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `generate_cards.py` — ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `verify_cards.py` — QA: Asserts 100% data fidelity between cards and CSV
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `preview_raw_cards.py` — Temporary: Generates raw PHI cards for manual verification
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `analyze_rarity.py` — Stats: Outputs initial gene/trajectory frequency counts
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `compute_rarity_scores.py` — Stats: Computes I_total surprisal and k-anonymity
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `create_splits_and_prompts.py` — Pipeline: 80/20 Stratified train/test splits + eval prompts
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `prepare_tinker_data.py` — Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
-  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `launch_tinker_jobs.py` — API execution script to trigger model fine-tuning
+  * **`utils/`**
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `config.py.template` — Template for global configuration
+  * **`01_dataset_processing/`**
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `convert_dates_to_ages.py` — Privacy: Scrubs exact surgery/DOB dates into patient age
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `generate_cards.py` — ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `verify_cards.py` — QA: Asserts 100% data fidelity between cards and CSV
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `preview_raw_cards.py` — Temporary: Generates raw PHI cards for manual verification
+  * **`02_rarity_analysis/`**
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `analyze_rarity.py` — Stats: Outputs initial gene/trajectory frequency counts
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `compute_rarity_scores.py` — Stats: Computes I_total surprisal and k-anonymity
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `create_splits_and_prompts.py` — Pipeline: 80/20 Stratified train/test splits + eval prompts
+  * **`03_tinker_tuning/`**
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `prepare_tinker_data.py` — Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `launch_tinker_jobs.py` — API execution script to trigger model fine-tuning
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `list_tinker_models.py` — Helper script to list active deployed Tinker models
+  * **`04_evaluation/`**
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `generate_predictions.py` — Executes generation against models M0, M1, M2 using Tinker APIs
+      * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `compute_metrics.py` — Computes memorization attack success and empirical evaluation rates
 
-* **`data/`** *(Ignored by git)*
+* **`data/`** *(Strictly Ignored by git)*
   * **`raw/`**
     * <img src="https://cdn-icons-png.flaticon.com/256/8242/8242984.png" width="16" height="16"> `YOUR_DATABASE_HERE.csv` — *(Proprietary source data)*
   * **`cards/`**
@@ -107,11 +140,14 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M2_coarsened.jsonl` — Payload for Tinker SFT (M2)
 
 ## <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/console.svg" width="24" height="24"> Getting Started
-1. <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/settings.svg" width="16" height="16"> **Configure:** Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
-2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Sanitize Data:** Run `python src/convert_dates_to_ages.py` to permanently strip sensitive PHI dates and replace them with calculated age.
-3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Extract:** Run `python src/generate_cards.py` to build the foundational datasets.
-4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Verify:** Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
-5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Score:** Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
-6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Stratify:** Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
-7. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Payloads:** Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
-8. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Fine-Tune:** Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
+> [!IMPORTANT]
+> **API Key Setup:** Set your `TINKER_API_KEY` either as a system environment variable, or modify the generated `src/utils/config.py` file to include it before proceeding. Do NOT commit the API key.
+
+1. <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/settings.svg" width="16" height="16"> **Configure:** Duplicate `src/utils/config.py.template` into `src/utils/config.py` and configure your dataset path and environment keys.
+2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Sanitize Data:** Run `python src/01_dataset_processing/convert_dates_to_ages.py` to permanently strip sensitive PHI dates.
+3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Extract:** Run `python src/01_dataset_processing/generate_cards.py` to build the foundational datasets.
+4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Verify:** Run `python src/01_dataset_processing/verify_cards.py` to ensure zero data pipeline leakage.
+5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Score:** Run `python src/02_rarity_analysis/compute_rarity_scores.py` to generate the theoretical bounds.
+6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Stratify:** Run `python src/02_rarity_analysis/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
+7. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Payloads:** Run `python src/03_tinker_tuning/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
+8. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Fine-Tune:** Run `python src/03_tinker_tuning/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.

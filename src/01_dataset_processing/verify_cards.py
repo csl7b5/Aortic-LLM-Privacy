@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+
 import pandas as pd
 import json
 import re
@@ -5,7 +9,7 @@ import numpy as np
 
 from generate_cards import (
     _safe_bool01, _to_int_list, _map_multi, COMPLICATING_FACTORS_MAP,
-    _clean_free_text, SURG_TYPES, _parse_date
+    _clean_free_text, SURG_TYPES
 )
 from config import CSV_PATH, FULL_CARDS_PATH as JSONL_PATH
 
@@ -118,11 +122,11 @@ def run_verification():
         # 7. Check Number of Surgeries
         n_surg = 0
         for n in [1, 2, 3]:
-            dt = _parse_date(row.get(f"surg_{n}_date"))
+            has_age = not pd.isna(row.get(f"surg_{n}_age"))
             any_flag = any((_safe_bool01(row.get(f"surg_{n}_{t}")) == 1) for t in SURG_TYPES if f"surg_{n}_{t}" in row.index)
             type_val = row.get(f"surg_{n}_type")
             any_type = not pd.isna(type_val) and str(type_val).strip() not in ("", "\xa0", "nan", "NaN")
-            if dt is not None or any_flag or any_type:
+            if has_age or any_flag or any_type:
                 n_surg += 1
                 
         expected_surg_count = str(n_surg)

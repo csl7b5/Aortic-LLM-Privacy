@@ -1,3 +1,8 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '01_dataset_processing')))
+
 import pandas as pd
 import numpy as np
 import json

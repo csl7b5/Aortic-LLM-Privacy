@@ -1,13 +1,18 @@
 import os
+from pathlib import Path
+
+# --- Credentials (DO NOT COMMIT) ---
+TINKER_API_KEY = "YOUR_TINKER_API_KEY_HERE"
 
 # --- Dataset Configuration ---
 # Point this to your local proprietary clinical dataset.
 # IMPORTANT: Never commit your raw patient data, or the generated cards, to GitHub.
 # The data/ directory is explicitly ignored in the .gitignore.
-CSV_PATH = "../data/raw/<REPLACE_WITH_YOUR_CSV_FILENAME>.csv"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+CSV_PATH = str(PROJECT_ROOT / "data" / "raw" / "REPLACE_WITH_YOUR_CSV_FILENAME.csv")
 
 # --- Output Directories ---
-DATA_DIR = "../data"
+DATA_DIR = str(PROJECT_ROOT / "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 CARDS_DIR = os.path.join(DATA_DIR, "cards")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")

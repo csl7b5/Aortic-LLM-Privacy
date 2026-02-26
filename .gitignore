@@ -1,9 +1,6 @@
 # Ignore all data directories to prevent PHI/PII leakage
 data/*
 !data/.gitkeep
-!data/raw/.gitkeep
-!data/cards/.gitkeep
-!data/processed/.gitkeep
 
 # Ignore python caches, virtual environments, and local configs
 __pycache__/
@@ -12,7 +9,10 @@ __pycache__/
 venv/
 env/
 .env
-src/config.py
+
+# Ignore config keys but DO NOT ignore the template
+src/utils/config.py
+!src/utils/config.py.template
 
 # Ignore OS files
 .DS_Store
