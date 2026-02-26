@@ -65,7 +65,7 @@ Large Language Models are pre-trained on vast corpuses of internet text to under
 However, SFT inherently risks catastrophic privacy failures. If a model overfits to the training data, it may memorize the exact arbitrary strings of a specific patient's record, allowing malicious actors to extract protected health information (PHI) simply by prompting the model with a few known demographic details.
 
 ### The Tinker Platform (Thinking Machines Lab)
-To execute the fine-tuning pipelines and massive parallel inference generation required for this project, we utilize **Tinker**, a developer platform built by the [Thinking Machines Lab](https://www.thinkingmachineslab.com/). 
+To execute the fine-tuning pipelines and massive parallel inference generation required for this project, we utilize **Tinker**, a developer platform built by the [Thinking Machines Lab](https://thinkingmachines.ai/tinker/). 
 
 Tinker provides scalable infrastructure for:
 1.  **LoRA Fine-Tuning:** Efficiently fine-tuning `meta-llama/Llama-3.1-8B-Instruct` using Low-Rank Adaptation via the `tinker-cookbook`.
