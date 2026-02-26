@@ -21,35 +21,26 @@ If you are replicating this pipeline, you must supply your own clinical CSV.
 ### Required CSV Schema
 To successfully run `generate_cards.py` and the rarity scoring pipeline, your dataset must contain the following core columns. Note that categorical variables are expected as integer codes (e.g. `1`, `2`) rather than text. 
 
-**Demographics:**
-*   `Age_at_presentation`: Numeric float/int (e.g. `45.2`)
-*   `Sex`: String (e.g. "M", "F")
-*   `Family_history_aortic_disease`: Boolean flag (`1` = Yes, `0` = No)
-
-**Genetics:**
-*   `Pathogenic Gene`: String of the gene name (e.g. "FBN1", "SMAD3"). Blank if none.
-*   `VUS Gene`: String of the gene name. Blank if none.
-
-**Phenotype Flags (Integer codes):**
-*   `Aneurysm_involvement`: `0`: None, `1`: Root, `2`: Ascending, `3`: Arch, `4`: Descending, `5`: Abdominal. (Accepts comma-separated lists like `1, 2`)
-*   `Acute_aortic_syndrome`: `0`: None, `1`: Type A dissection, `2`: Type B dissection, `3`: Intramural hematoma, `4`: PAU.
-*   `Complicating_factor`: `0`: None, `1`: Rupture, `2`: Cardiac tamponade, `3`: Malperfusion, `4`: Other.
-*   `Bicuspid_aortic_valve`: Boolean flag (`1` = Yes, `0` = No)
-
-**Measurements:**
-*   `first_reported_diameter`: Numeric string or float in millimeters (e.g. `45` or `45.5`)
-*   `intervention_diameter`: Numeric string or float (e.g. `50`)
-
-**Surgical History (Up to 3 surgeries: replace `N` with `1`, `2`, `3`):**
-*   `surg_N_date`: Standard date string (e.g. `10/24/2020` or `2020-10-24`)
-*   `surg_N_type`: Clinician free-text field (e.g. "Bentall procedure with 29mm graft")
-*   **Procedure Flags** (Boolean `1` or `0`): `surg_N_aortic_valve_repair`, `surg_N_aortic_valve_replacement`, `surg_N_aortic_root_repair`, `surg_N_aortic_root_replacement`, `surg_N_ascending_aorta_replacement`, `surg_N_hemiarch_replacement`, `surg_N_total_arch_replacement`, `surg_N_stage_I_elephant_trunk`, `surg_N_TEVAR`, `surg_N_CABG`, `surg_N_descending_replacement`.
-
-**Outcomes:**
-*   `underwent_reoperation`: Boolean flag (`1` = Yes, `0` = No)
-*   `Reoperation_indication`: Free-text field describing why reoperation occurred.
-*   `mortality`: Boolean flag (`1` = Dead, `0` = Alive)
-*   `Causes_of_death`: Integer code (`1` = Aortic/Cardiac, `2` = Other)
+| **Category** | **Column Name** | **Data Type** | **Description / Codes** |
+| :--- | :--- | :--- | :--- |
+| **Demographics** | `Age_at_presentation` | Numeric | Exact age (e.g. `45.2`) |
+| | `Sex` | String | e.g. `"M"`, `"F"` |
+| | `Family_history_aortic_disease` | Boolean | `1` = Yes, `0` = No |
+| **Genetics** | `Pathogenic Gene` | String | Gene name (e.g. "FBN1", "SMAD3"). Blank if none. |
+| | `VUS Gene` | String | Gene name. Blank if none. |
+| **Phenotypes** | `Aneurysm_involvement` | Integer List | `0`: None, `1`: Root, `2`: Ascending, `3`: Arch, `4`: Descending, `5`: Abdominal. (Accepts comma-lists like `1, 2`) |
+| | `Acute_aortic_syndrome` | Integer | `0`: None, `1`: Type A dissection, `2`: Type B, `3`: Intramural hematoma, `4`: PAU. |
+| | `Complicating_factor` | Integer | `0`: None, `1`: Rupture, `2`: Cardiac tamponade, `3`: Malperfusion, `4`: Other. |
+| | `Bicuspid_aortic_valve` | Boolean | `1` = Yes, `0` = No |
+| **Measurements**| `first_reported_diameter` | Numeric | Size in mm (e.g. `45` or `45.5`) |
+| | `intervention_diameter` | Numeric | Size in mm (e.g. `50`) |
+| **Surgery** | `surg_N_date` (Up to $N=3$) | Date String | e.g. `10/24/2020` or `2020-10-24` |
+| | `surg_N_type` | Free-text | Clinician description (e.g. "Bentall procedure with 29mm graft") |
+| | **Procedure Flags** | Boolean | `surg_N_aortic_valve_repair`, `surg_N_aortic_valve_replacement`, `surg_N_aortic_root_repair`, `surg_N_aortic_root_replacement`, `surg_N_ascending_aorta_replacement`, `surg_N_hemiarch_replacement`, `surg_N_total_arch_replacement`, `surg_N_stage_I_elephant_trunk`, `surg_N_TEVAR`, `surg_N_CABG`, `surg_N_descending_replacement` |
+| **Outcomes** | `underwent_reoperation` | Boolean | `1` = Yes, `0` = No |
+| | `Reoperation_indication` | Free-text | Field describing why reoperation occurred. |
+| | `mortality` | Boolean | `1` = Dead, `0` = Alive |
+| | `Causes_of_death` | Integer | `1` = Aortic/Cardiac, `2` = Other |
 
 ## Study Architecture
 The study evaluates three model configurations against a standardized holdout evaluation set:
@@ -91,15 +82,15 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 ```text
 .
 ├── 📁 src/
-│   ├── 🐍 config.py.template             # Template for global configuration
-│   ├── 🐍 generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
-│   ├── 🐍 verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
-│   ├── 🐍 preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
-│   ├── 🐍 analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
-│   ├── 🐍 compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
-│   ├── 🐍 create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
-│   ├── 🐍 prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
-│   └── 🐍 launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> config.py.template             # Template for global configuration
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
+│   ├── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
+│   └── <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
 │
 ├── 📁 data/ (Ignored by git)
 │   ├── 📁 raw/
@@ -118,9 +109,9 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 ## 🚀 Getting Started
 1. ⚙️ Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
-2. 🐍 Run `python src/generate_cards.py` to build the foundational datasets.
-3. 🐍 Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
-4. 🐍 Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
-5. 🐍 Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
-6. 🐍 Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
+2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/generate_cards.py` to build the foundational datasets.
+3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
+4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
+5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
+6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
 7. 🚀 Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
