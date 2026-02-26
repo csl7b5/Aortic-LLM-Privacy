@@ -90,37 +90,37 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 ```text
 .
-├── src/
-│   ├── config.py.template             # Template for global configuration
-│   ├── generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
-│   ├── verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
-│   ├── preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
-│   ├── analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
-│   ├── compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
-│   ├── create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
-│   ├── prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
-│   └── launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
+├── 📁 src/
+│   ├── 🐍 config.py.template             # Template for global configuration
+│   ├── 🐍 generate_cards.py              # ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
+│   ├── 🐍 verify_cards.py                # QA: Asserts 100% data fidelity between cards and CSV
+│   ├── 🐍 preview_raw_cards.py           # Temporary: Generates raw PHI cards for manual verification
+│   ├── 🐍 analyze_rarity.py              # Stats: Outputs initial gene/trajectory frequency counts
+│   ├── 🐍 compute_rarity_scores.py       # Stats: Computes I_total surprisal and k-anonymity
+│   ├── 🐍 create_splits_and_prompts.py   # Pipeline: 80/20 Stratified train/test splits + eval prompts
+│   ├── 🐍 prepare_tinker_data.py         # Pipeline: Formats splits.csv into Tinker SFT jsonl payloads
+│   └── 🐍 launch_tinker_jobs.py          # API execution script to trigger model fine-tuning
 │
-├── data/ (Ignored by git)
-│   ├── raw/
-│   │   └── Updated Aortic Genetic Patients Database...csv  # (Proprietary source data)
-│   ├── cards/
-│   │   ├── cards_full.jsonl           # M1 Training source
-│   │   ├── cards_coarsened.jsonl      # M2 Training source
-│   │   └── cards_partial.jsonl        # Evaluation Prompt source
-│   └── processed/
-│       ├── splits.csv                 # Train/Test assignments + all continuous rarity metrics
-│       ├── eval_prompts.jsonl         # Inference attack prompts mapping to Patient IDs
-│       ├── tinker_train_M1_full.jsonl # Payload for Tinker SFT (M1)
-│       └── tinker_train_M2_coarsened.jsonl # Payload for Tinker SFT (M2)
-└── README.md
+├── 📁 data/ (Ignored by git)
+│   ├── 📁 raw/
+│   │   └── 📊 Updated Aortic Genetic Patients Database...csv  # (Proprietary source data)
+│   ├── 📁 cards/
+│   │   ├── 📝 cards_full.jsonl           # M1 Training source
+│   │   ├── 📝 cards_coarsened.jsonl      # M2 Training source
+│   │   └── 📝 cards_partial.jsonl        # Evaluation Prompt source
+│   └── 📁 processed/
+│       ├── 📊 splits.csv                 # Train/Test assignments + all continuous rarity metrics
+│       ├── 📝 eval_prompts.jsonl         # Inference attack prompts mapping to Patient IDs
+│       ├── 📝 tinker_train_M1_full.jsonl # Payload for Tinker SFT (M1)
+│       └── 📝 tinker_train_M2_coarsened.jsonl # Payload for Tinker SFT (M2)
+└── 📖 README.md
 ```
 
-## Getting Started
-1. Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
-2. Run `python src/generate_cards.py` to build the foundational datasets.
-3. Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
-4. Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
-5. Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
-6. Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
-7. Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
+## 🚀 Getting Started
+1. ⚙️ Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
+2. 🐍 Run `python src/generate_cards.py` to build the foundational datasets.
+3. 🐍 Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
+4. 🐍 Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
+5. 🐍 Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
+6. 🐍 Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
+7. 🚀 Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
