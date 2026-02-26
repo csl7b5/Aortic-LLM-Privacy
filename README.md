@@ -50,11 +50,11 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 > *   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
 > *   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
 
-> [!DEFINITIONS]
-> ### Evaluation Metrics
-> 1.  **Membership Inference (AUC):** Can a classifier determine if a patient was in the `train` split based on the nearest-neighbor similarity of the LLM's generated output?
-> 2.  **Patient Collapse (Dominance/Entropy):** When prompted with an incomplete card (e.g., genetics and demographics only) 10 times, does the LLM deterministically hallucinate the exact same unique surgical trajectory every time?
-> 3.  **Rare-Combo Reproduction Rate:** Does the LLM output a set of clinical assertions that uniquely matches exactly $k=1$ patient in the training set?
+
+### Evaluation Metrics
+1.  **Membership Inference (AUC):** Can a classifier determine if a patient was in the `train` split based on the nearest-neighbor similarity of the LLM's generated output?
+2.  **Patient Collapse (Dominance/Entropy):** When prompted with an incomplete card (e.g., genetics and demographics only) 10 times, does the LLM deterministically hallucinate the exact same unique surgical trajectory every time?
+3.  **Rare-Combo Reproduction Rate:** Does the LLM output a set of clinical assertions that uniquely matches exactly $k=1$ patient in the training set?
 
 ---
 
@@ -69,12 +69,12 @@ We independently compute the empirical probability $p(x)$ of observing a patient
 
 **Composite Rarity:** $I_{total} = I_{gen} + I_{phen} + I_{traj}$
 
-> [!DEFINITIONS]
-> ### K-Anonymity Rarity Strata
-> Stratification is anchored to established disclosure control literature (k-anonymity):
-> *   **Ultra Rare:** High identifiability risk (Full profile $k \le 2$ or Top 5% surprisal).
-> *   **Rare:** Elevated rarity ($k \le 5$ or Top 25% surprisal).
-> *   **Common:** Lower identifiable risk ($k > 5$ and bottom 75% surprisal).
+
+### K-Anonymity Rarity Strata
+Stratification is anchored to established disclosure control literature (k-anonymity):
+*   **Ultra Rare:** High identifiability risk (Full profile $k \le 2$ or Top 5% surprisal).
+*   **Rare:** Elevated rarity ($k \le 5$ or Top 25% surprisal).
+*   **Common:** Lower identifiable risk ($k > 5$ and bottom 75% surprisal).
 
 ---
 
@@ -106,11 +106,11 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M1_full.jsonl` — Payload for Tinker SFT (M1)
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M2_coarsened.jsonl` — Payload for Tinker SFT (M2)
 
-## 🚀 Getting Started
-1. ⚙️ Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
-2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/generate_cards.py` to build the foundational datasets.
-3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
-4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
-5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
-6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
-7. 🚀 Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
+## <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/console.svg" width="24" height="24"> Getting Started
+1. <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/settings.svg" width="16" height="16"> **Configure:** Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
+2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Extract:** Run `python src/generate_cards.py` to build the foundational datasets.
+3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Verify:** Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
+4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Score:** Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
+5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Stratify:** Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
+6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Payloads:** Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
+7. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Fine-Tune:** Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
