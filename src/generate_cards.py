@@ -138,30 +138,6 @@ def _safe_bool01(x) -> int:
         s = str(x).strip().lower()
         return 1 if s in ("1", "yes", "y", "true") else 0
 
-def _parse_date(x):
-    if pd.isna(x):
-        return None
-    s = str(x).strip()
-    if not s or s == "\xa0":
-        return None
-    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d %H:%M:%S"):
-        try:
-            return datetime.strptime(s, fmt)
-        except Exception:
-            continue
-    try:
-        return pd.to_datetime(s, errors="coerce").to_pydatetime()
-    except Exception:
-        return None
-
-def _calc_age_years(dob_dt, event_dt):
-    if dob_dt is None or event_dt is None:
-        return None
-    days = (event_dt - dob_dt).days
-    if days < 0:
-        return None
-    return int(days // 365.25)
-
 def _age_bucket(age):
     if age is None or pd.isna(age):
         return "Unknown"
@@ -233,19 +209,25 @@ def _map_multi(code_val, mapping):
             deduped.append(item)
     return deduped
 
-def summarize_surgery(row, n: int, dob_dt):
+def summarize_surgery(row, n: int):
     """
     Summarize surgery n as:
-      - age at surgery (computed from DOB and surg_n_date) if possible
+      - age at surgery (read directly from surg_n_age)
       - categories based on surg_n_* flags
       - free text 'surg_n_type' and 'surg_n_others' (scrubbed)
     """
-    date_col = f"surg_{n}_date"
+    age_col = f"surg_{n}_age"
     type_col = f"surg_{n}_type"
     other_col = f"surg_{n}_others"
 
-    surg_dt = _parse_date(row.get(date_col))
-    age_at = _calc_age_years(dob_dt, surg_dt)
+    # Try reading the age integer directly
+    age_val = row.get(age_col)
+    age_at = None
+    if not pd.isna(age_val):
+        try:
+            age_at = int(float(age_val))
+        except Exception:
+            pass
 
     # Flag-driven categories
     cats = []
@@ -282,9 +264,6 @@ def build_card(row, mode: str = "full") -> str:
     """
     mode in {"full", "partial", "coarsened"}
     """
-    # Parse DOB internally but never emit it
-    dob_dt = _parse_date(row.get("DOB"))
-
     sex = str(row.get("Sex")).strip() if not pd.isna(row.get("Sex")) else "Unknown"
     age = row.get("age")
     age_int = None
@@ -332,13 +311,13 @@ def build_card(row, mode: str = "full") -> str:
     surgery_ages = []
     n_surg = 0
     for n in [1, 2, 3]:
-        dt = _parse_date(row.get(f"surg_{n}_date"))
-        # count a surgery if there is a date OR any procedure flag OR a type string
+        has_age = not pd.isna(row.get(f"surg_{n}_age"))
+        # count a surgery if there is an age OR any procedure flag OR a type string
         any_flag = any((_safe_bool01(row.get(f"surg_{n}_{t}")) == 1) for t in SURG_TYPES if f"surg_{n}_{t}" in row.index)
         any_type = not pd.isna(row.get(f"surg_{n}_type")) and str(row.get(f"surg_{n}_type")).strip() not in ("", "\xa0", "nan", "NaN")
-        if dt is not None or any_flag or any_type:
+        if has_age or any_flag or any_type:
             n_surg += 1
-            age_at, line = summarize_surgery(row, n, dob_dt)
+            age_at, line = summarize_surgery(row, n)
             surgery_lines.append(line)
             surgery_ages.append(age_at)
 
