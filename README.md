@@ -83,6 +83,7 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 * **`src/`**
   * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `config.py.template` — Template for global configuration
+  * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `convert_dates_to_ages.py` — Privacy: Scrubs exact surgery/DOB dates into patient age
   * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `generate_cards.py` — ETL: Raw CSV -> patient cards (Full, Coarsened, Partial)
   * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `verify_cards.py` — QA: Asserts 100% data fidelity between cards and CSV
   * <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> `preview_raw_cards.py` — Temporary: Generates raw PHI cards for manual verification
@@ -107,9 +108,10 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 ## <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/console.svg" width="24" height="24"> Getting Started
 1. <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/settings.svg" width="16" height="16"> **Configure:** Duplicate `src/config.py.template` into `src/config.py` and configure your dataset path.
-2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Extract:** Run `python src/generate_cards.py` to build the foundational datasets.
-3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Verify:** Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
-4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Score:** Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
-5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Stratify:** Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
-6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Payloads:** Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
-7. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Fine-Tune:** Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
+2. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Sanitize Data:** Run `python src/convert_dates_to_ages.py` to permanently strip sensitive PHI dates and replace them with calculated age.
+3. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Extract:** Run `python src/generate_cards.py` to build the foundational datasets.
+4. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Verify:** Run `python src/verify_cards.py` to ensure zero data pipeline leakage.
+5. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Score:** Run `python src/compute_rarity_scores.py` to generate the theoretical bounds.
+6. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Stratify:** Run `python src/create_splits_and_prompts.py` to stratify the cohort based on surprisal scores.
+7. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Payloads:** Run `python src/prepare_tinker_data.py` to prepare the JSONL files for the SFT cluster.
+8. <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> **Fine-Tune:** Run `python src/launch_tinker_jobs.py` to begin fine-tuning M1 and M2.
