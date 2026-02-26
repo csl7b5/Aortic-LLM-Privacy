@@ -42,7 +42,7 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 | | `mortality` | Boolean | `1` = Dead, `0` = Alive |
 | | `Causes_of_death` | Integer | `1` = Aortic/Cardiac, `2` = Other |
 
-> [!NOTE]
+> [!DEFINITIONS]
 > ### Study Architecture
 > The study evaluates three model configurations against a standardized holdout evaluation set:
 > 
@@ -50,10 +50,11 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 > *   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
 > *   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
 
-### Evaluation Metrics
-1.  **Membership Inference (AUC):** Can a classifier determine if a patient was in the `train` split based on the nearest-neighbor similarity of the LLM's generated output?
-2.  **Patient Collapse (Dominance/Entropy):** When prompted with an incomplete card (e.g., genetics and demographics only) 10 times, does the LLM deterministically hallucinate the exact same unique surgical trajectory every time?
-3.  **Rare-Combo Reproduction Rate:** Does the LLM output a set of clinical assertions that uniquely matches exactly $k=1$ patient in the training set?
+> [!DEFINITIONS]
+> ### Evaluation Metrics
+> 1.  **Membership Inference (AUC):** Can a classifier determine if a patient was in the `train` split based on the nearest-neighbor similarity of the LLM's generated output?
+> 2.  **Patient Collapse (Dominance/Entropy):** When prompted with an incomplete card (e.g., genetics and demographics only) 10 times, does the LLM deterministically hallucinate the exact same unique surgical trajectory every time?
+> 3.  **Rare-Combo Reproduction Rate:** Does the LLM output a set of clinical assertions that uniquely matches exactly $k=1$ patient in the training set?
 
 ---
 
@@ -68,11 +69,12 @@ We independently compute the empirical probability $p(x)$ of observing a patient
 
 **Composite Rarity:** $I_{total} = I_{gen} + I_{phen} + I_{traj}$
 
-### K-Anonymity Rarity Strata
-Stratification is anchored to established disclosure control literature (k-anonymity):
-*   **Ultra Rare:** High identifiability risk (Full profile $k \le 2$ or Top 5% surprisal).
-*   **Rare:** Elevated rarity ($k \le 5$ or Top 25% surprisal).
-*   **Common:** Lower identifiable risk ($k > 5$ and bottom 75% surprisal).
+> [!DEFINITIONS]
+> ### K-Anonymity Rarity Strata
+> Stratification is anchored to established disclosure control literature (k-anonymity):
+> *   **Ultra Rare:** High identifiability risk (Full profile $k \le 2$ or Top 5% surprisal).
+> *   **Rare:** Elevated rarity ($k \le 5$ or Top 25% surprisal).
+> *   **Common:** Lower identifiable risk ($k > 5$ and bottom 75% surprisal).
 
 ---
 
@@ -93,7 +95,7 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 * **`data/`** *(Ignored by git)*
   * **`raw/`**
-    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `Updated Aortic Genetic Patients Database...csv` — *(Proprietary source data)*
+    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `YOUR_DATABASE_HERE.csv` — *(Proprietary source data)*
   * **`cards/`**
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_full.jsonl` — M1 Training source
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_coarsened.jsonl` — M2 Training source
