@@ -77,7 +77,7 @@ Stratification is anchored to established disclosure control literature (k-anony
 
 ---
 
-## Repository Structure & Pipeline
+## <img src="https://cdn-icons-png.flaticon.com/512/17404/17404308.png" width="24" height="24"> Repository Structure & Pipeline
 
 The project is organized into `src/` (pipeline logic) and `data/` (raw and generated artifacts).
 
