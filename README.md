@@ -42,13 +42,12 @@ To successfully run `generate_cards.py` and the rarity scoring pipeline, your da
 | | `mortality` | Boolean | `1` = Dead, `0` = Alive |
 | | `Causes_of_death` | Integer | `1` = Aortic/Cardiac, `2` = Other |
 
-> [!DEFINITIONS]
-> ### Study Architecture
-> The study evaluates three model configurations against a standardized holdout evaluation set:
-> 
-> *   **M0 (Baseline):** A prompt-only baseline (no fine-tuning).
-> *   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
-> *   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
+### Study Architecture
+The study evaluates three model configurations against a standardized holdout evaluation set:
+
+*   **M0 (Baseline):** A prompt-only baseline (no fine-tuning).
+*   **M1 (Full FT):** SFT tuned on the fully-identifiable original patient cards.
+*   **M2 (Coarsened FT):** SFT tuned on privacy-mitigated, coarsened patient cards (e.g., specific age replaced with age brackets, exact sizes replaced with "<50mm", exact dates removed).
 
 
 ### Evaluation Metrics
@@ -95,13 +94,13 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 * **`data/`** *(Ignored by git)*
   * **`raw/`**
-    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `YOUR_DATABASE_HERE.csv` — *(Proprietary source data)*
+    * <img src="https://cdn-icons-png.flaticon.com/256/8242/8242984.png" width="16" height="16"> `YOUR_DATABASE_HERE.csv` — *(Proprietary source data)*
   * **`cards/`**
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_full.jsonl` — M1 Training source
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_coarsened.jsonl` — M2 Training source
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `cards_partial.jsonl` — Evaluation Prompt source
   * **`processed/`**
-    * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/csv.svg" width="16" height="16"> `splits.csv` — Train/Test assignments + all continuous rarity metrics
+    * <img src="https://cdn-icons-png.flaticon.com/256/8242/8242984.png" width="16" height="16"> `splits.csv` — Train/Test assignments + all continuous rarity metrics
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `eval_prompts.jsonl` — Inference attack prompts mapping to Patient IDs
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M1_full.jsonl` — Payload for Tinker SFT (M1)
     * <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16"> `tinker_train_M2_coarsened.jsonl` — Payload for Tinker SFT (M2)
