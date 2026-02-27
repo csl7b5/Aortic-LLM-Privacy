@@ -106,7 +106,7 @@ Stratification is anchored to established disclosure control literature (k-anony
 
 The project is organized into `src/` (pipeline logic) and `data/` (raw and generated artifacts).
 
-* **`src/`** <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> *(Python pipeline logic)*
+* **`src/`** <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> 
   * **`utils/`**
       * `config.py.template` — Template for global configuration
   * **`01_dataset_processing/`**
@@ -126,9 +126,9 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
       * `generate_predictions.py` — Executes generation against models M0, M1, M2 using Tinker APIs
       * `compute_metrics.py` — Computes memorization attack success and empirical evaluation rates
 
-* **`data/`** *(Strictly Ignored by git)*
+* **`data/`** 
   * **`raw/`** <img src="https://cdn-icons-png.flaticon.com/256/8242/8242984.png" width="16" height="16">
-    * `YOUR_DATABASE_HERE.csv` — *(Proprietary source data)*
+    * `YOUR_DATABASE_HERE.csv`
   * **`cards/`** <img src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/json.svg" width="16" height="16">
     * `cards_full.jsonl` — M1 Training source
     * `cards_coarsened.jsonl` — M2 Training source
@@ -147,7 +147,7 @@ The project is organized into `src/` (pipeline logic) and `data/` (raw and gener
 
 *Run the following Python <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16"> scripts in sequence:*
 
-2. **Sanitize Data:** Run `python src/01_dataset_processing/convert_dates_to_ages.py` to permanently strip sensitive PHI dates.
+2. **Sanitize Data:** Run `python src/01_dataset_processing/convert_dates_to_ages.py` to convert all surgery dates into patient ages. This is a further privacy measure to ensure no exact DOB/surgery dates are exposed.
 3. **Extract:** Run `python src/01_dataset_processing/generate_cards.py` to build the foundational datasets.
 4. **Verify:** Run `python src/01_dataset_processing/verify_cards.py` to ensure zero data pipeline leakage.
 5. **Score:** Run `python src/02_rarity_analysis/compute_rarity_scores.py` to generate the theoretical bounds.
