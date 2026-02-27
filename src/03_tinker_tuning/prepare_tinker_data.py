@@ -11,7 +11,9 @@ from config import (
     FULL_CARDS_PATH,
     COARSENED_CARDS_PATH,
     OUT_M1_PATH,
-    OUT_M2_PATH
+    OUT_M2_PATH,
+    EXACT_CARDS_PATH,
+    OUT_M1_EXACT_PATH
 )
 
 def load_jsonl(path):
@@ -35,16 +37,19 @@ def main():
     partial_cards = load_jsonl(PARTIAL_CARDS_PATH)
     full_cards = load_jsonl(FULL_CARDS_PATH)
     coarsened_cards = load_jsonl(COARSENED_CARDS_PATH)
+    exact_cards = load_jsonl(EXACT_CARDS_PATH)
     
     m1_records = []
     m2_records = []
+    m1_exact_records = []
     
     for pat_id in train_ids:
         partial_text = partial_cards.get(pat_id)
         full_text = full_cards.get(pat_id)
         coarsened_text = coarsened_cards.get(pat_id)
+        exact_text = exact_cards.get(pat_id)
         
-        if not (partial_text and full_text and coarsened_text):
+        if not (partial_text and full_text and coarsened_text and exact_text):
             print(f"Warning: Missing card data for {pat_id}")
             continue
             
@@ -66,6 +71,14 @@ def main():
             ]
         })
         
+        # M1 Exact Record: Fine-tuned on EXACT AGE cards
+        m1_exact_records.append({
+            "messages": [
+                {"role": "user", "content": prompt_text},
+                {"role": "assistant", "content": exact_text}
+            ]
+        })
+        
     print(f"Writing {len(m1_records)} records to {OUT_M1_PATH}")
     with open(OUT_M1_PATH, "w", encoding="utf-8") as f:
         for rec in m1_records:
@@ -74,6 +87,11 @@ def main():
     print(f"Writing {len(m2_records)} records to {OUT_M2_PATH}")
     with open(OUT_M2_PATH, "w", encoding="utf-8") as f:
         for rec in m2_records:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            
+    print(f"Writing {len(m1_exact_records)} records to {OUT_M1_EXACT_PATH}")
+    with open(OUT_M1_EXACT_PATH, "w", encoding="utf-8") as f:
+        for rec in m1_exact_records:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             
     print("Done! Formatted datasets are ready for Tinker.")

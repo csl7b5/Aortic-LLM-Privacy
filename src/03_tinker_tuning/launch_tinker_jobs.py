@@ -34,9 +34,9 @@ os.environ["TINKER_API_KEY"] = api_key
 
 BASE_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 
-def run_job(run_name: str, dataset_path: str):
+def run_job(run_name: str, dataset_path: str, epochs: int = 3):
     print(f"\n=============================================")
-    print(f"Launching Tinker Job: {run_name}")
+    print(f"Launching Tinker Job: {run_name} ({epochs} Epochs)")
     print(f"Dataset: {dataset_path}")
     print(f"=============================================")
     
@@ -63,7 +63,7 @@ def run_job(run_name: str, dataset_path: str):
         "dataset_builder": dataset,
         "learning_rate": 2e-5,
         "lr_schedule": "cosine",
-        "num_epochs": 3,
+        "num_epochs": epochs,
         "eval_every": 10,
     })
     
@@ -73,13 +73,15 @@ def run_job(run_name: str, dataset_path: str):
     asyncio.run(train.main(config))
 
 def launch_training():
-    # Execute M1 Job (Full Identifiability)
-    m1_path = os.path.abspath("../data/processed/tinker_train_M1_full.jsonl")
-    run_job("M1_Full", m1_path)
+    from config import OUT_M1_EXACT_PATH, OUT_M2_PATH
     
-    # Execute M2 Job (Coarsened Privacy)
-    m2_path = os.path.abspath("../data/processed/tinker_train_M2_coarsened.jsonl")
-    run_job("M2_Coarsened", m2_path)
+    # Execute Phase II M1 Job (Exact Age - 12 Epochs)
+    m1_exact_path = os.path.abspath(OUT_M1_EXACT_PATH)
+    run_job("M1_Exact_Age_12_Epochs", m1_exact_path, epochs=12)
+    
+    # Execute Phase II M2 Job (Coarsened - 12 Epochs)
+    m2_path = os.path.abspath(OUT_M2_PATH)
+    run_job("M2_Coarsened_12_Epochs", m2_path, epochs=12)
 
 if __name__ == "__main__":
     launch_training()

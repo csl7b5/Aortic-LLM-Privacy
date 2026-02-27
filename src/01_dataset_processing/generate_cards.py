@@ -213,7 +213,7 @@ def _map_multi(code_val, mapping):
             deduped.append(item)
     return deduped
 
-def summarize_surgery(row, n: int):
+def summarize_surgery(row, n: int, mode: str = "full"):
     """
     Summarize surgery n as:
       - age at surgery (read directly from surg_n_age)
@@ -229,7 +229,10 @@ def summarize_surgery(row, n: int):
     age_at = None
     if not pd.isna(age_val):
         try:
-            age_at = int(float(age_val))
+            if mode == "exact":
+                age_at = round(float(age_val), 2)
+            else:
+                age_at = int(float(age_val))
         except Exception:
             pass
 
@@ -276,7 +279,10 @@ def build_card(row, mode: str = "full") -> str:
             if isinstance(age, str):
                 age = age.replace("\xa0", "").strip()
             if age:
-                age_int = int(float(age))
+                if mode == "exact":
+                    age_int = round(float(age), 2)
+                else:
+                    age_int = int(float(age))
     except Exception:
         age_int = None
 
@@ -321,7 +327,7 @@ def build_card(row, mode: str = "full") -> str:
         any_type = not pd.isna(row.get(f"surg_{n}_type")) and str(row.get(f"surg_{n}_type")).strip() not in ("", "\xa0", "nan", "NaN")
         if has_age or any_flag or any_type:
             n_surg += 1
-            age_at, line = summarize_surgery(row, n)
+            age_at, line = summarize_surgery(row, n, mode=mode)
             surgery_lines.append(line)
             surgery_ages.append(age_at)
 
@@ -498,6 +504,7 @@ def main():
         "full": OUT_DIR / "cards_full.jsonl",
         "partial": OUT_DIR / "cards_partial.jsonl",
         "coarsened": OUT_DIR / "cards_coarsened.jsonl",
+        "exact": OUT_DIR / "cards_exact.jsonl",
     }
     # overwrite existing
     for p in outputs.values():
@@ -508,8 +515,8 @@ def main():
     for i, row in df.iterrows():
         pid = patient_ids[i]
 
-        # generate three card types
-        for mode in ["full", "partial", "coarsened"]:
+        # generate card types
+        for mode in ["full", "partial", "coarsened", "exact"]:
             card = build_card(row, mode=mode)
 
             # Minimal metadata to help later experiments (no identifiers)
