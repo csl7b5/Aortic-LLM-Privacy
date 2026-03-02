@@ -29,16 +29,34 @@ Fine-tuning was performed via the [Tinker](https://thinkingmachines.ai/tinker/) 
 
 ## Attack Phases
 
-Three PHI extraction attacks are implemented, each targeting a distinct category of patient-specific protected health information:
+Three PHI extraction attacks are implemented across two training regimes, each targeting a distinct category of patient-specific protected health information. All attacks are applied to M0, M1, and M2 and evaluated on 10 sampled generations per patient.
 
-### Phase II: Aortic Imaging Attack
+### Epoch-Scaling Experimental Design
+
+The study evaluates memorization across two training regimes to isolate when and how PHI leakage emerges:
+
+- **Phase I — Baseline Generalization (3 epochs):** Models are trained for 3 epochs, consistent with industry-standard practice for clinical SFT. This phase tests whether standard fine-tuning inherently induces memorization, or whether models remain within the bounds of clinical generalization. Results from Phase I are archived in `data/archive_3_epochs/`.
+
+- **Phase II / III — Deep Memorization (12 epochs):** Models are trained for 12 epochs, deliberately inducing overfitting. This phase identifies the ceiling of PHI leakage under aggressive training and characterizes which data types (sizes, genes, comorbidities) are most vulnerable to memorization at scale.
+
+### Phase I: Membership Inference & Collapse (3 Epochs)
+
+At 3 epochs, model outputs are evaluated using:
+- **Nearest-neighbor similarity (AUC):** Can an adversary determine whether a patient was in the training set based on the semantic similarity of the model's output to the ground-truth patient card?
+- **Patient Collapse / Dominance:** When prompted with a partial card 10 times, does the model deterministically reproduce the same unique surgical trajectory — evidence of specific patient encoding rather than generalization?
+- **Rare-Combination Reproduction:** Does the model hallucinate a set of clinical assertions that uniquely match exactly one patient in the training cohort?
+
+### Phase II: Aortic Imaging Attack (12 Epochs)
+
 The model is prompted with a patient's partial clinical profile and asked to reproduce their aortic measurements — specifically, their first recorded diameter and their diameter at intervention. Evaluated using strict exact-match (both values must be correct in the same generation).
 
-### Phase II: Genetic Variant Attack
-The model is asked to reproduce a patient's pathogenic gene variant or VUS (variant of uncertain significance) from their clinical profile. Evaluated using regex-based exact gene name matching with contextual guards to exclude generic list mentions.
+### Phase II: Genetic Variant Attack (12 Epochs)
 
-### Phase III: ICD-10 Comorbidity Attack
-The model is asked to reproduce a patient's full ICD-10 diagnostic code array. Two complementary metrics are used: (1) strict exact array match, and (2) partial recall — the fraction of ground-truth codes appearing in at least one of 10 sampled generations, computed via regex extraction.
+The model is asked to reproduce a patient's pathogenic gene variant or VUS (variant of uncertain significance) from their clinical profile. Evaluated using regex-based exact gene name matching with contextual guards to exclude cases where the model mentions the gene as part of a generic clinical discussion rather than as a patient-specific fact.
+
+### Phase III: ICD-10 Comorbidity Attack (12 Epochs)
+
+The model is asked to reproduce a patient's full ICD-10 diagnostic code array, capturing the complete comorbidity profile (cardiovascular disease, diabetes, dyslipidemia, cardiac implants, etc.). Two complementary metrics are used: (1) strict exact array match, and (2) partial recall — the fraction of ground-truth codes appearing in at least one of 10 sampled generations, extracted via regex and matched at the 3-character ICD-10 prefix level.
 
 > [!NOTE]
 > Quantitative results from these attacks are reserved for publication. See the accompanying paper for findings.
@@ -240,14 +258,55 @@ python src/04_evaluation/analysis/generate_manual_examples.py
 
 ## Patient Rarity Framework
 
-Memorization risk is hypothesized to scale inversely with patient clinical rarity. Rarity is computed via **Self-Information (Surprisal):** $I(x) = -\log_{10} p(x)$
+A central hypothesis of this study is that LLM memorization risk scales **inversely with patient clinical rarity** — that is, the more phenotypically distinctive a patient is within the training cohort, the more likely the model is to have memorized their specific PHI rather than generalized across similar patients.
 
-Three axes are computed independently and summed:
-- **$I_{gen}$** — Genetic rarity (pathogenic + VUS gene frequency)
-- **$I_{phen}$** — Phenotypic rarity (aneurysm type, BAV, acute syndrome)
-- **$I_{traj}$** — Trajectory rarity (number + type of surgeries, reoperation)
+To operationalize rarity without arbitrary heuristics, we use a **Self-Information (Surprisal)** framework grounded in information theory:
 
-**K-Anonymity strata:**
-- **Ultra Rare:** $k \le 2$ or top 5% surprisal
-- **Rare:** $k \le 5$ or top 25% surprisal
-- **Common:** $k > 5$ and bottom 75% surprisal
+$$I(x) = -\log_{10} p(x)$$
+
+where $p(x)$ is the empirical probability of observing a patient's exact profile within our cohort. Higher self-information = rarer patient = higher memorization risk.
+
+### Three Rarity Axes
+
+Rarity is computed independently across three clinically meaningful dimensions and summed into a composite score:
+
+**1. Genetic Rarity ($I_{gen}$)**
+Computed from the empirical frequency of a patient's pathogenic gene and/or VUS within the cohort. A patient with a highly prevalent gene (e.g., FBN1, present in ~48 patients) has low $I_{gen}$. A patient with a singleton gene (e.g., CBS, present in 1 patient) has maximum $I_{gen}$. Patients with no identified variant are assigned $I_{gen} = 0$.
+
+**2. Phenotypic Rarity ($I_{phen}$)**
+Computed from the joint empirical frequency of a patient's:
+- Aneurysm involvement pattern (root, ascending, arch, descending, abdominal — any combination)
+- Acute aortic syndrome type (none, Type A/B dissection, intramural hematoma, PAU)
+- Complicating factors (rupture, tamponade, malperfusion)
+- Bicuspid aortic valve status
+
+Rare combinations of these phenotypic features produce high $I_{phen}$.
+
+**3. Surgical Trajectory Rarity ($I_{traj}$)**
+Computed from the empirical frequency of a patient's surgical history pattern, including:
+- Number of operations (1, 2, or 3+)
+- Categories of aortic replacement performed (root, ascending, hemiarch, total arch, TEVAR, etc.)
+- Whether reoperation occurred and its indication
+
+Patients with unusual multi-stage surgical trajectories (e.g., reoperation with total arch replacement after prior root replacement) receive high $I_{traj}$.
+
+### Composite Rarity Score
+
+$$I_{total} = I_{gen} + I_{phen} + I_{traj}$$
+
+This additive formulation assumes approximate independence across axes and yields a scalar rarity score per patient that can be used for stratified sampling, stratified analysis, and train/test split construction.
+
+### K-Anonymity Stratification
+
+The composite score is mapped to three risk strata anchored to established disclosure control literature (k-anonymity), where $k$ is the number of patients in the cohort sharing the same complete profile:
+
+| Stratum | K-Anonymity Criterion | Surprisal Criterion | Re-identification Risk |
+|---|---|---|---|
+| **Ultra Rare** | $k \le 2$ | Top 5% of $I_{total}$ | Highest |
+| **Rare** | $k \le 5$ | Top 25% of $I_{total}$ | Elevated |
+| **Common** | $k > 5$ | Bottom 75% of $I_{total}$ | Lower |
+
+These strata are used to stratify the 80/20 train/test split (ensuring rarity distribution is preserved across partitions) and to analyze whether memorization rates differ between rare, rare, and common patients.
+
+> [!NOTE]
+> The rarity framework is implemented in `src/02_rarity_analysis/compute_rarity_scores.py`. The resulting scores and strata assignments are stored in `data/processed/splits.csv` alongside each patient's train/test assignment.
