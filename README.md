@@ -139,6 +139,64 @@ A common assumption in clinical AI deployment is that lightweight fine-tuning (L
 
 If LoRA SFT on 1,048 patients over 12 epochs produces this level of PHI exposure, full fine-tuning or pretraining on larger clinical corpora should be presumed to carry substantially greater risk.
 
+
+---
+
+## Patient Rarity Framework
+
+A central hypothesis of this study is that LLM memorization risk scales **inversely with patient clinical rarity** — that is, the more phenotypically distinctive a patient is within the training cohort, the more likely the model is to have memorized their specific PHI rather than generalized across similar patients.
+
+To operationalize rarity without arbitrary heuristics, we use a **Self-Information (Surprisal)** framework grounded in information theory:
+
+$$I(x) = -\log_{10} p(x)$$
+
+where $p(x)$ is the empirical probability of observing a patient's exact profile within our cohort. Higher self-information = rarer patient = higher memorization risk.
+
+### Three Rarity Axes
+
+Rarity is computed independently across three clinically meaningful dimensions and summed into a composite score:
+
+**1. Genetic Rarity ($I_{gen}$)**
+Computed from the empirical frequency of a patient's pathogenic gene and/or VUS within the cohort. A patient with a highly prevalent gene (e.g., FBN1, present in ~48 patients) has low $I_{gen}$. A patient with a singleton gene (e.g., CBS, present in 1 patient) has maximum $I_{gen}$. Patients with no identified variant are assigned $I_{gen} = 0$.
+
+**2. Phenotypic Rarity ($I_{phen}$)**
+Computed from the joint empirical frequency of a patient's:
+- Aneurysm involvement pattern (root, ascending, arch, descending, abdominal — any combination)
+- Acute aortic syndrome type (none, Type A/B dissection, intramural hematoma, PAU)
+- Complicating factors (rupture, tamponade, malperfusion)
+- Bicuspid aortic valve status
+
+Rare combinations of these phenotypic features produce high $I_{phen}$.
+
+**3. Surgical Trajectory Rarity ($I_{traj}$)**
+Computed from the empirical frequency of a patient's surgical history pattern, including:
+- Number of operations (1, 2, or 3+)
+- Categories of aortic replacement performed (root, ascending, hemiarch, total arch, TEVAR, etc.)
+- Whether reoperation occurred and its indication
+
+Patients with unusual multi-stage surgical trajectories (e.g., reoperation with total arch replacement after prior root replacement) receive high $I_{traj}$.
+
+### Composite Rarity Score
+
+$$I_{total} = I_{gen} + I_{phen} + I_{traj}$$
+
+This additive formulation assumes approximate independence across axes and yields a scalar rarity score per patient that can be used for stratified sampling, stratified analysis, and train/test split construction.
+
+### K-Anonymity Stratification
+
+The composite score is mapped to three risk strata anchored to established disclosure control literature (k-anonymity), where $k$ is the number of patients in the cohort sharing the same complete profile:
+
+| Stratum | K-Anonymity Criterion | Surprisal Criterion | Re-identification Risk |
+|---|---|---|---|
+| **Ultra Rare** | $k \le 2$ | Top 5% of $I_{total}$ | Highest |
+| **Rare** | $k \le 5$ | Top 25% of $I_{total}$ | Elevated |
+| **Common** | $k > 5$ | Bottom 75% of $I_{total}$ | Lower |
+
+These strata are used to stratify the 80/20 train/test split (ensuring rarity distribution is preserved across partitions) and to analyze whether memorization rates differ between rare, rare, and common patients.
+
+> [!NOTE]
+> The rarity framework is implemented in `src/02_rarity_analysis/compute_rarity_scores.py`. The resulting scores and strata assignments are stored in `data/processed/splits.csv` alongside each patient's train/test assignment.
+
 ---
 
 ## Repository Structure
@@ -255,58 +313,3 @@ python src/04_evaluation/analysis/generate_manual_examples.py
 ```
 
 ---
-
-## Patient Rarity Framework
-
-A central hypothesis of this study is that LLM memorization risk scales **inversely with patient clinical rarity** — that is, the more phenotypically distinctive a patient is within the training cohort, the more likely the model is to have memorized their specific PHI rather than generalized across similar patients.
-
-To operationalize rarity without arbitrary heuristics, we use a **Self-Information (Surprisal)** framework grounded in information theory:
-
-$$I(x) = -\log_{10} p(x)$$
-
-where $p(x)$ is the empirical probability of observing a patient's exact profile within our cohort. Higher self-information = rarer patient = higher memorization risk.
-
-### Three Rarity Axes
-
-Rarity is computed independently across three clinically meaningful dimensions and summed into a composite score:
-
-**1. Genetic Rarity ($I_{gen}$)**
-Computed from the empirical frequency of a patient's pathogenic gene and/or VUS within the cohort. A patient with a highly prevalent gene (e.g., FBN1, present in ~48 patients) has low $I_{gen}$. A patient with a singleton gene (e.g., CBS, present in 1 patient) has maximum $I_{gen}$. Patients with no identified variant are assigned $I_{gen} = 0$.
-
-**2. Phenotypic Rarity ($I_{phen}$)**
-Computed from the joint empirical frequency of a patient's:
-- Aneurysm involvement pattern (root, ascending, arch, descending, abdominal — any combination)
-- Acute aortic syndrome type (none, Type A/B dissection, intramural hematoma, PAU)
-- Complicating factors (rupture, tamponade, malperfusion)
-- Bicuspid aortic valve status
-
-Rare combinations of these phenotypic features produce high $I_{phen}$.
-
-**3. Surgical Trajectory Rarity ($I_{traj}$)**
-Computed from the empirical frequency of a patient's surgical history pattern, including:
-- Number of operations (1, 2, or 3+)
-- Categories of aortic replacement performed (root, ascending, hemiarch, total arch, TEVAR, etc.)
-- Whether reoperation occurred and its indication
-
-Patients with unusual multi-stage surgical trajectories (e.g., reoperation with total arch replacement after prior root replacement) receive high $I_{traj}$.
-
-### Composite Rarity Score
-
-$$I_{total} = I_{gen} + I_{phen} + I_{traj}$$
-
-This additive formulation assumes approximate independence across axes and yields a scalar rarity score per patient that can be used for stratified sampling, stratified analysis, and train/test split construction.
-
-### K-Anonymity Stratification
-
-The composite score is mapped to three risk strata anchored to established disclosure control literature (k-anonymity), where $k$ is the number of patients in the cohort sharing the same complete profile:
-
-| Stratum | K-Anonymity Criterion | Surprisal Criterion | Re-identification Risk |
-|---|---|---|---|
-| **Ultra Rare** | $k \le 2$ | Top 5% of $I_{total}$ | Highest |
-| **Rare** | $k \le 5$ | Top 25% of $I_{total}$ | Elevated |
-| **Common** | $k > 5$ | Bottom 75% of $I_{total}$ | Lower |
-
-These strata are used to stratify the 80/20 train/test split (ensuring rarity distribution is preserved across partitions) and to analyze whether memorization rates differ between rare, rare, and common patients.
-
-> [!NOTE]
-> The rarity framework is implemented in `src/02_rarity_analysis/compute_rarity_scores.py`. The resulting scores and strata assignments are stored in `data/processed/splits.csv` alongside each patient's train/test assignment.
