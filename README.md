@@ -131,13 +131,9 @@ To execute fine-tuning and large-scale parallel inference, we use **[Tinker](htt
 
 ### Why This Matters
 
-A common assumption in clinical AI deployment is that lightweight fine-tuning (LoRA/PEFT) on protected datasets is a low-risk adaptation strategy — that the adapter's small parameter count prevents meaningful memorization. Our results challenge this assumption:
+A common assumption in clinical AI deployment is that lightweight fine-tuning (LoRA/PEFT) on protected datasets is a low-risk adaptation strategy — that the adapter's small parameter count prevents meaningful memorization. Our study empirically challenges this assumption across three categories of protected health information: aortic imaging measurements, genetic variant associations, and ICD-10 comorbidity profiles.
 
-- M1 (LoRA, 12 epochs, 1,048 patients) reproduced **exact dual aortic measurements** for 5.5% of patients with a **zero baseline**.
-- M1 recalled **atrial fibrillation status** for 68.8% of patients who had it (vs. 0% baseline).
-- M1 recalled **cardiac implant status** (pacemakers, prosthetic valves) for 79.5% of patients.
-
-If LoRA SFT on 1,048 patients over 12 epochs produces this level of PHI exposure, full fine-tuning or pretraining on larger clinical corpora should be presumed to carry substantially greater risk.
+Quantitative findings are reserved for the accompanying paper. The takeaway: if LoRA SFT on a small single-institution cohort is sufficient to produce measurable PHI leakage, full fine-tuning or continued pretraining on larger clinical corpora should be presumed to carry substantially greater risk.
 
 
 ---
