@@ -1,16 +1,36 @@
-# ── DATA: Exclude everything to prevent PHI/HIPAA leakage ────────────────────
-# Exclude all data/ contents recursively, but preserve folder structure
-# via .gitkeep files so collaborators can see the expected layout.
+# ═══════════════════════════════════════════════════════════════════════════════
+# GITIGNORE — Memorization / Privacy Auditing Project
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# ONLY src/ is tracked. All data (raw or processed), results, figures,
+# logs, and notebooks are excluded to prevent PHI/HIPAA leakage.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
 
-data/**
-!data/**/.gitkeep
-!data/Reminder.md
+# ── DATA: Exclude EVERYTHING in data/ to prevent PHI/HIPAA leakage ───────────
+# This includes raw records, processed files, model predictions, results,
+# summaries, figures, and any intermediate outputs.
+data/
+
+# ── Any data-adjacent output directories at project root ─────────────────────
+logs/
+outputs/
+results/
+*.jsonl
+*.csv
+*.parquet
+*.pkl
+*.h5
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
 
 # ── Virtual environments ──────────────────────────────────────────────────────
 venv/
@@ -23,6 +43,10 @@ env/
 src/utils/config.py
 !src/utils/config.py.template
 
+# ── Jupyter Notebooks ─────────────────────────────────────────────────────────
+*.ipynb
+.ipynb_checkpoints/
+
 # ── OS & editor files ─────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
@@ -30,3 +54,10 @@ Thumbs.db
 *.swo
 .idea/
 .vscode/
+
+# ── Model weights / checkpoints (never commit large binaries) ─────────────────
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.gguf

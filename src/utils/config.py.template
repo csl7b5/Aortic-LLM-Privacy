@@ -4,6 +4,15 @@ from pathlib import Path
 # --- Credentials (DO NOT COMMIT) ---
 TINKER_API_KEY = "YOUR_TINKER_API_KEY_HERE"
 
+# --- Model Endpoints ---
+# Fill these in from data/model_registry.md before running generate_predictions.py.
+# Also set as environment variables:
+#   export TINKER_URI_M1="tinker://<uuid>:train:0/sampler_weights/final"
+#   export TINKER_URI_M2="tinker://<uuid>:train:0/sampler_weights/final"
+TINKER_URI_M1 = "tinker://FILL_FROM_MODEL_REGISTRY"  # M1 (Exact, 12 epo)
+TINKER_URI_M2 = "tinker://FILL_FROM_MODEL_REGISTRY"  # M2 (Coarsened, 12 epo)
+
+
 # --- Dataset Configuration ---
 # Point this to your local proprietary clinical dataset.
 # IMPORTANT: Never commit your raw patient data, or the generated cards, to GitHub.

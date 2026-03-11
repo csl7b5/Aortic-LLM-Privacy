@@ -1,22 +1,16 @@
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
-
-import os
-import sys
 import json
 import asyncio
 import tenacity
 from pathlib import Path
 
-# Provide local path to tinker_cookbook
-sys.path.append("/Users/lolcreative883/tinker/tinker-cookbook")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'utils')))
+sys.path.append(os.path.expanduser("~/tinker/tinker-cookbook"))
     
 import tinker
 from tinker.lib.public_interfaces.service_client import ServiceClient
 from tinker_cookbook.renderers import get_renderer
-
-
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 @tenacity.retry(
@@ -34,7 +28,16 @@ async def sample_with_retry(sampling_client, minput, num_samples, stop_condition
         )
     )
 
-async def generate_for_model(model_name_or_id, is_base_model, prompts, output_file, num_samples=10, batch_size=50):
+async def generate_for_model(model_name_or_id, is_base_model, prompts_file, output_file, num_samples=10, batch_size=50):
+    if not prompts_file.exists():
+        print(f"Could not find prompts at {prompts_file}")
+        return
+
+    prompts = []
+    with open(prompts_file, "r") as f:
+        for line in f:
+            prompts.append(json.loads(line))
+
     client = ServiceClient()
     
     if is_base_model:
@@ -46,7 +49,6 @@ async def generate_for_model(model_name_or_id, is_base_model, prompts, output_fi
     renderer = get_renderer("llama3", tokenizer=tokenizer)
     stop_condition = renderer.get_stop_sequences()
     
-    # Check if we already have some done
     completed_ids = set()
     if output_file.exists():
         with open(output_file, "r") as f:
@@ -55,26 +57,19 @@ async def generate_for_model(model_name_or_id, is_base_model, prompts, output_fi
                 
     remaining_prompts = [p for p in prompts if p["prompt_id"] not in completed_ids]
     
-    print(f"Generating for {model_name_or_id}. {len(completed_ids)} already done, {len(remaining_prompts)} remaining.")
+    print(f"Generating for {model_name_or_id} on {prompts_file.name}. {len(completed_ids)} already done, {len(remaining_prompts)} remaining.")
     if not remaining_prompts:
         return
         
     out_f = open(output_file, "a")
     
     async def process_batch(batch):
-        # build tinker ModelInputs
         model_inputs = []
         for p in batch:
             messages = [{"role": "user", "content": p["prompt_text"]}]
             model_inputs.append(renderer.build_generation_prompt(messages))
             
-        # sample
-        tasks = []
-        for minput in model_inputs:
-            tasks.append(
-                sample_with_retry(sampling_client, minput, num_samples, stop_condition)
-            )
-        
+        tasks = [sample_with_retry(sampling_client, min, num_samples, stop_condition) for min in model_inputs]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
         for p, result in zip(batch, results):
@@ -92,6 +87,8 @@ async def generate_for_model(model_name_or_id, is_base_model, prompts, output_fi
                 "patient_id": p["patient_id"],
                 "split": p["split"],
                 "rarity_group": p["rarity_group"],
+                "target_text": p["target_text"],
+                "target_icd10": p.get("target_icd10_raw", ""),
                 "generations": generations
             }
             out_f.write(json.dumps(out_obj) + "\n")
@@ -115,38 +112,56 @@ async def main():
             
     if not api_key:
         print("ERROR: TINKER_API_KEY not found in environment variables or config.py!")
-        print("Please export TINKER_API_KEY='your_key' or add it to src/utils/config.py.")
         sys.exit(1)
         
     os.environ["TINKER_API_KEY"] = api_key
     
-    # Model identifiers
+    # ── Model URIs ────────────────────────────────────────────────────────────
+    # Do NOT hardcode model endpoints here. Set them as environment variables
+    # before running, or copy the URIs from data/model_registry.md.
+    #
+    # Required env vars:
+    #   export TINKER_URI_M1="tinker://<uuid>:train:0/sampler_weights/final"
+    #   export TINKER_URI_M2="tinker://<uuid>:train:0/sampler_weights/final"
+    #
+    # See: data/model_registry.md — "Phase II / Phase III — Core Study Models"
+    # ─────────────────────────────────────────────────────────────────────────
+    M1_12_EPOCH = os.environ.get("TINKER_URI_M1")
+    M2_12_EPOCH = os.environ.get("TINKER_URI_M2")
     M0 = "meta-llama/Llama-3.1-8B-Instruct"
-    M1 = "tinker://9394d193-94dc-59ec-9b51-4eca06ebbc0f:train:0/sampler_weights/final"
-    M2 = "tinker://90476feb-603f-550d-ab72-3560f27ee267:train:0/sampler_weights/final"
+
+    if not M1_12_EPOCH or not M2_12_EPOCH:
+        print("ERROR: TINKER_URI_M1 and TINKER_URI_M2 must be set as environment variables.")
+        print("       See data/model_registry.md for the correct URIs.")
+        sys.exit(1)
+
     
-    # Load prompts
-    prompts_path = Path("data/processed/eval_prompts.jsonl")
-    if not prompts_path.exists():
-        print(f"Could not find prompts at {prompts_path}")
-        return
-        
-    prompts = []
-    with open(prompts_path, "r") as f:
-        for line in f:
-            prompts.append(json.loads(line))
-            
-    out_dir = Path("data/results")
+    out_dir = Path("data/results/predictions")
     out_dir.mkdir(parents=True, exist_ok=True)
     
-    print("--- Running M0 (Base Model) ---")
-    await generate_for_model(M0, True, prompts, out_dir / "M0_predictions.jsonl")
+    attacks = [
+        ("gene", Path("data/processed/eval_prompts_gene_attack.jsonl")),
+        ("size", Path("data/processed/eval_prompts_size_attack.jsonl")),
+        ("icd10", Path("data/processed/eval_prompts_icd10_attack.jsonl"))
+    ]
     
-    print("--- Running M1 (Full SFT) ---")
-    await generate_for_model(M1, False, prompts, out_dir / "M1_predictions.jsonl")
+    models = [
+        ("M0_baseline", M0, True),
+        ("M1_exact_12epo", M1_12_EPOCH, False),
+        ("M2_coars_12epo", M2_12_EPOCH, False)
+    ]
     
-    print("--- Running M2 (Coarsened SFT) ---")
-    await generate_for_model(M2, False, prompts, out_dir / "M2_predictions.jsonl")
+    NUM_SAMPLES = 10 
+    
+    for attack_name, prompt_file in attacks:
+        print(f"\n======================================")
+        print(f"Starting {attack_name.upper()} Attack Suite")
+        print(f"======================================")
+        
+        for friendly_name, model_uri, is_base in models:
+            out_file = out_dir / f"{friendly_name}_{attack_name}_predictions.jsonl"
+            print(f"\n--- Running {friendly_name} ---")
+            await generate_for_model(model_uri, is_base, prompt_file, out_file, num_samples=NUM_SAMPLES)
 
 if __name__ == "__main__":
     asyncio.run(main())
