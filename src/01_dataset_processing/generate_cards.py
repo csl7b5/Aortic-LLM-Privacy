@@ -13,17 +13,17 @@ import numpy as np
 # CONFIG
 # -----------------------------
 from config import CSV_PATH as INPUT_CSV, CARDS_DIR
-ENCODING = "cp1252"  # your file reads with cp1252
+ENCODING = "cp1252"  # dataset encoding
 
 OUT_DIR = Path(CARDS_DIR)
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Optional: if you have an internal patient identifier column you trust, set it here.
-# If None, we will use the row index as patient_id.
-PATIENT_ID_COL = None  # e.g., "patient_id" if you have one
+# If a patient identifier column is present in the CSV, set its name here.
+# If None, row index is used as patient_id.
+PATIENT_ID_COL = None  # e.g., "patient_id"
 
 # -----------------------------
-# MAPPINGS (from your schema)
+# MAPPINGS
 # -----------------------------
 ANEURYSM_INVOLVEMENT_MAP = {
     0: "None",
@@ -55,7 +55,7 @@ CAUSE_OF_DEATH_MAP = {
     2: "Other",
 }
 
-# Pathology code map (your list)
+# Pathology code map
 PATHOLOGY_MAP = {
     1: "Medial degeneration",
     2: "Cystic medial degeneration",
@@ -83,7 +83,7 @@ PATHOLOGY_MAP = {
     24: "Intimal thickening",
 }
 
-# Surgery columns you have
+# Surgery procedure columns
 SURG_TYPES = [
     "aortic_valve_repair",
     "aortic_valve_replacement",

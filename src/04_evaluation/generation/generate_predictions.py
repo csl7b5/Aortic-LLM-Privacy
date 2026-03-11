@@ -117,14 +117,11 @@ async def main():
     os.environ["TINKER_API_KEY"] = api_key
     
     # ── Model URIs ────────────────────────────────────────────────────────────
-    # Do NOT hardcode model endpoints here. Set them as environment variables
-    # before running, or copy the URIs from data/model_registry.md.
-    #
-    # Required env vars:
+    # Model endpoints are loaded from environment variables.
+    # Set before running:
     #   export TINKER_URI_M1="tinker://<uuid>:train:0/sampler_weights/final"
     #   export TINKER_URI_M2="tinker://<uuid>:train:0/sampler_weights/final"
-    #
-    # See: data/model_registry.md — "Phase II / Phase III — Core Study Models"
+    # URIs are listed in data/model_registry.md.
     # ─────────────────────────────────────────────────────────────────────────
     M1_12_EPOCH = os.environ.get("TINKER_URI_M1")
     M2_12_EPOCH = os.environ.get("TINKER_URI_M2")
